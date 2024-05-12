@@ -1,0 +1,4 @@
+[B]1.1.1[/B]
+- Forrás változás követése
+[B]1.1.0[/B]
+- Átállás HLS stream-re

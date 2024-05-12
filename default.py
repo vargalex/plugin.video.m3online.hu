@@ -183,6 +183,8 @@ def getOpenSeries(url):
 def getOpenEpisodes(seriesId, page='1'):
     response = client.request(SITE_URL + 'm3/open?series={0}&page={1}'.format(quote_plus(seriesId), page), headers={'Referer': SITE_URL + 'm3/open'})    
     result = parser.parseDOM(response, 'div', attrs={'class': 'row mb-1'})
+    if len(result) == 0:
+        result = parser.parseDOM(response, 'a', attrs={'class': 'row mb-1'})
     for item in result:
         episode = parser.parseDOM(item, 'p')[0]
         title = parser.parseDOM(item, 'h5')[0]
