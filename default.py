@@ -57,14 +57,14 @@ def getPlaylist():
     for item in programs:
         meta = parseMeta(item)
         label = meta['title'] + ' - ' + meta['tagline'] if not meta['tagline'] == '' else meta['title']
-        addDirectoryItem(label, 'play&filename=%s&subtitle=%s' % (meta['filename'], meta['hasSubtitle']), meta['poster'], isFolder=False, meta=meta)
+        addDirectoryItem(label, 'play&filename=%s&subtitle=%s&mtype=m3' % (meta['filename'], meta['hasSubtitle']), meta['poster'], isFolder=False, meta=meta)
     xbmcplugin.setContent(_handle, 'videos')
     xbmcplugin.endOfDirectory(_handle, cacheToDisc=False)
 
 
-def play(filename, hasSubtitle, isLive):
+def play(filename, hasSubtitle, isLive, mtype):
     target = 'live' if isLive else filename
-    streamData = client.request(SITE_URL + 'api/m3/v3/stream?target=%s&type=open' % target, XHR=True)
+    streamData = client.request(SITE_URL + 'api/m3/v3/stream?target=%s&type=%s' % (target, mtype), XHR=True)
     license_key = SITE_URL + streamData['proxy_url'] + '?drm-type=widevine&type=' + streamData['type'] + '||R{SSM}|'
     DRM = 'com.widevine.alpha'
     PROTOCOL = 'mpd'
@@ -306,6 +306,7 @@ if __name__ == '__main__':
     filename = params.get('filename')
     subtitle = params.get('subtitle', 'false') == 'true'
     seriesId = params.get('seriesid')
+    mType = params.get('mtype')
     url = params.get('url')
     page = params.get('page', '1')
   
@@ -314,7 +315,7 @@ if __name__ == '__main__':
     elif action == 'playlist':
         getPlaylist()
     elif action == 'play':
-        play(filename, subtitle, live)
+        play(filename, subtitle, live, mType if mType else "open")
     elif action == 'open_media':
         getOpenGenre()
     elif action == 'open_series':
