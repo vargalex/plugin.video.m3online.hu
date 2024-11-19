@@ -1,3 +1,6 @@
+[B]1.1.2[/B]
+- Forrás változás követése
+- Átállás mpeg dash lejátszásra
 [B]1.1.1[/B]
 - Forrás változás követése
 [B]1.1.0[/B]

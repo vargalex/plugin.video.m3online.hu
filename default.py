@@ -40,7 +40,7 @@ _handle = int(sys.argv[1])
 __addon__ = xbmcaddon.Addon()
 __addon__.setSetting('ver', __addon__.getAddonInfo('version'))
 _addonFanart = __addon__.getAddonInfo('fanart')
-SITE_URL = 'https://archivum.mtva.hu/'
+SITE_URL = 'https://nemzetiarchivum.hu/'
 
 
 def root():
@@ -64,24 +64,25 @@ def getPlaylist():
 
 def play(filename, hasSubtitle, isLive):
     target = 'live' if isLive else filename
-    streamData = client.request(SITE_URL + 'm3/stream?no_lb=1&target=' + target, headers={'Referer': SITE_URL + 'm3'}, XHR=True)
+    streamData = client.request(SITE_URL + 'api/m3/v3/stream?target=%s&type=open' % target, XHR=True)
+    license_key = SITE_URL + streamData['proxy_url'] + '?drm-type=widevine&type=' + streamData['type'] + '||R{SSM}|'
+    DRM = 'com.widevine.alpha'
+    PROTOCOL = 'mpd'
 
-    PROTOCOL = 'hls'
     KODI_VERSION_MAJOR = int(xbmc.getInfoLabel('System.BuildVersion').split('.')[0])
 
     from inputstreamhelper import Helper
     is_helper = Helper(PROTOCOL)
     if is_helper.check_inputstream():
-        play_item = xbmcgui.ListItem(path=streamData['url'])
-        play_item.setMimeType('application/dash+xml')
-        play_item.setContentLookup(False)
-
+        play_item = xbmcgui.ListItem(path=streamData['mpeg_dash']['url'])
         if KODI_VERSION_MAJOR >= 19:
             play_item.setProperty('inputstream', is_helper.inputstream_addon)
         else:
             play_item.setProperty('inputstreamaddon', is_helper.inputstream_addon)
 
         play_item.setProperty('inputstream.adaptive.manifest_type', PROTOCOL)
+        play_item.setProperty('inputstream.adaptive.license_type', DRM)
+        play_item.setProperty('inputstream.adaptive.license_key', license_key)
 
         if hasSubtitle:
             play_item.setSubtitles([SITE_URL + 'subtitle/' + filename + '.srt'])
@@ -153,7 +154,7 @@ def getOpenGenre():
                 title = parser.parseDOM(item, 'span')[0]
             else:
                 title = parser.parseDOM(item, 'a')[0]
-            title = re.sub('(\:\s*$)', '', title).encode('utf-8')
+            title = re.sub(r'(\:\s*$)', '', title).encode('utf-8')
             query = parser.parseDOM(item, 'div', ret='data-collection')[0]
             url = SITE_URL + 'm3/get-open?collection=' + query
             addDirectoryItem(title, 'open_series&url={}'.format(url), 'DefaultMovies.png')
@@ -190,7 +191,7 @@ def getOpenEpisodes(seriesId, page='1'):
         title = parser.parseDOM(item, 'h5')[0]
         plot = parser.parseDOM(item, 'p')[1]
         img = parser.parseDOM(item, 'div', ret='style')[0]
-        img = re.search('(http[s]?://[^\)]+)', img).group(1)
+        img = re.search(r'(http[s]?://[^\)]+)', img).group(1)
         filename = img.rsplit('/', 1)[-1]
         inner = parser.parseDOM(item, 'span')
         try: mpaa = inner[0]
